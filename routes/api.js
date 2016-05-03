@@ -31,7 +31,7 @@ module.exports = require('express').Router()
             if (err) {
                 res.json(BUGReport(err));
             } else if (user) {
-                if (getHash(user.passport.password) == password) {
+                if (getHash(password) == user.passport.password) {
                     user.passport.password = '';
                     req.session.user = user;
                     res.json(EmptyReport());

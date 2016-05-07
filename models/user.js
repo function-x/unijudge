@@ -14,6 +14,7 @@ var user = new Schema({
         },
     },
     profile: {},
+    administrator: Boolean,
 });
 
 module.exports = mongoose.model('user', user);

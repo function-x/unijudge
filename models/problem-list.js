@@ -10,4 +10,4 @@ var problemList = new Schema({
     problemList: [Schema.Types.ObjectId]
 });
 
-module.exports = mongoose.models('problemList', problemList);
+module.exports = mongoose.model('problemList', problemList);

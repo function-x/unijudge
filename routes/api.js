@@ -1,27 +1,11 @@
 var crypto = require('crypto');
 var User = require('../models/user');
+var Lib = require('./lib');
 
-function BUGReport(err){
-    console.log(err);
-    return {
-        code: -1,
-        msg: 'unexpected error',
-        body: {}
-    };
-}
-function EmptyReport(){
-    return {
-        code: 0,
-        msg: 'ok',
-        body: {}
-    };
-}
-function getHash(str){
-    return crypto.createHash('sha1').update(str).digest('hex');
-}
 
 module.exports = require('express').Router()
-// sign-in API
+    // sign-in API
+    .post('/sign-in', Lib.NeedSignOut)
     .post('/sign-in', function (req, res, next) {
         var username = req.body.username;
         var password = req.body.password;
@@ -29,45 +13,30 @@ module.exports = require('express').Router()
             'passport.username': username,
         }, function (err, user) {
             if (err) {
-                res.json(BUGReport(err));
+                res.json(Lib.BUGReport(err));
             } else if (user) {
-                if (getHash(password) == user.passport.password) {
+                if (Lib.Password(password) == user.passport.password) {
                     user.passport.password = '';
                     req.session.user = user;
-                    res.json(EmptyReport());
+                    res.json(Lib.SuccessReport());
                 } else {
-                    res.json({
-                        code: 201,
-                        msg: 'wrong username or password',
-                        body: {},
-                    });
+                    res.json(Lib.Report(201, 'wrong username or password', {}));
                 }
             } else {
-                res.json({
-                    code: 202,
-                    msg: 'no such user',
-                    body: {},
-                });
+                res.json(Lib.NotFoundReport());
             }
         });
     })
-// sign-out API
+    // sign-out API
+    .get('/sign-out', Lib.NeedSignIn)
     .get('/sign-out', function (req, res, next) {
-        if (req.session.user) {
-            req.session.destroy();
-            res.json(EmptyReport());
-        } else {
-            res.json({
-                code: 200,
-                msg: 'not login yet',
-                body: {},
-            });
-        }
+        req.session.destroy();
+        res.json(Lib.SuccessReport());
     })
-// sign-up API
-    .post('/sign-up', function(req, res, next) {
+    // sign-up API
+    .post('/sign-up', function (req, res, next) {
         var username = req.body.username;
-        var password = getHash(req.body.password);
+        var password = Lib.Password(req.body.password);
         var nickname = username;
         new User({
             passport: {
@@ -77,17 +46,12 @@ module.exports = require('express').Router()
             profile: {
                 nickname: nickname,
             }
-        }).save(function(err, user){
-            if(err) res.json(BUGReport(err));
-            else res.json(EmptyReport());
+        }).save(function (err, user) {
+            if (err) res.json(Lib.BUGReport(err));
+            else res.json(Lib.SuccessReport());
         })
     })
-
-// get status
+    // get status
     .get('/status', function (req, res, next) {
-        res.json({
-            code: 0,
-            msg: 'ok',
-            body: req.session
-        });
+        res.json(Lib.SuccessReport(req.session));
     })
